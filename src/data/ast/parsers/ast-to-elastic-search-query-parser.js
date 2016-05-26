@@ -14,7 +14,7 @@ export class AstToElasticSearchQueryParser extends AstParser{
     if (astTree[0]) {
       let result = {
         "constant_score": {
-          "filter": {
+          "query": {
             "bool": {
               "must": this._parseTree(astTree[0], [])
             }
@@ -51,34 +51,71 @@ export class AstToElasticSearchQueryParser extends AstParser{
         res = '{"term" : {"' + node.field + '":"' + node.value + '"}}'; //??????????????
         break;
       case ">":
-        res =  '{"range" : {"' + node.field + '":{"gt":' + node.value + '}}}'
+        res = this._createRangeExpression(node,"gt");
         break;
       case "<":
-        res =  '{"range" : {"' + node.field + '":{"lt":' + node.value + '}}}'
+        res = this._createRangeExpression(node,"lt");
         break;
       case ">=":
-        res =  '{"range" : {"' + node.field + '":{"gte":' + node.value + '}}}'
+        res = this._createRangeExpression(node,"gte");
         break;
       case "<=":
-        res =  '{"range" : {"' + node.field + '":{"lte":' + node.value + '}}}'
+        res = this._createRangeExpression(node,"lte");
         break;
     }
-    return JSON.parse(res);
+    return res;
+  }
+
+  _createRangeExpression(node, operand){
+    return {
+      "range": {
+        [node.field]: {
+          [operand]: node.value
+        },
+      }
+    };
   }
 
   _createEqualExpression(node){
     let v = node.value.trim().toLowerCase();
     let result = '';
     if (v.length>=2){
-      if (v.lastIndexOf("%")===(v.length-1))
-        result = '{"prefix" : {"' + node.field + '":"' + v.substring(0,v.length-1) +'"}}';
-      else if (v.indexOf("%")===0)
-        result = '{"wildcard" : {"' + node.field + '":"*' + v.substring(1,v.length) +'"}}';
+      if (v.lastIndexOf("%")===(v.length-1)) {
+        result = {
+          "prefix": {
+            [node.field]: v.substring(0, v.length - 1),
+          }
+        };
+      }
+      else if (v.indexOf("%")===0) {
+        result = {
+          "wildcard": {
+            [node.field]: "*" + v.substring(1, v.length),
+          }
+        };
+      }
     }
-    if (!result)
-      result = '{"term" : {"' + node.field + '":"' + v + '"}}';
+
+    if (!result){
+      if (v.split(' ').length>1) { //multi word search!
+        result = {
+          "match": {
+            [node.field]:{
+              "query":v,
+              "operator": "and"
+            }
+          }
+        };
+      }
+      else { // single word search
+        result = {
+          "term": {
+            [node.field]: v
+          }
+        };
+      }
+    }
     return result;
   }
 
 }
-
