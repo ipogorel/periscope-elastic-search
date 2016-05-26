@@ -71,7 +71,7 @@ System.register(["periscope-framework"], function (_export, _context) {
           if (astTree[0]) {
             var result = {
               "constant_score": {
-                "filter": {
+                "query": {
                   "bool": {
                     "must": this._parseTree(astTree[0], [])
                   }
@@ -105,28 +105,66 @@ System.register(["periscope-framework"], function (_export, _context) {
               res = '{"term" : {"' + node.field + '":"' + node.value + '"}}';
               break;
             case ">":
-              res = '{"range" : {"' + node.field + '":{"gt":' + node.value + '}}}';
+              res = this._createRangeExpression(node, "gt");
               break;
             case "<":
-              res = '{"range" : {"' + node.field + '":{"lt":' + node.value + '}}}';
+              res = this._createRangeExpression(node, "lt");
               break;
             case ">=":
-              res = '{"range" : {"' + node.field + '":{"gte":' + node.value + '}}}';
+              res = this._createRangeExpression(node, "gte");
               break;
             case "<=":
-              res = '{"range" : {"' + node.field + '":{"lte":' + node.value + '}}}';
+              res = this._createRangeExpression(node, "lte");
               break;
           }
-          return JSON.parse(res);
+          return res;
+        };
+
+        AstToElasticSearchQueryParser.prototype._createRangeExpression = function _createRangeExpression(node, operand) {
+          var _node$field, _range;
+
+          return {
+            "range": (_range = {}, _range[node.field] = (_node$field = {}, _node$field[operand] = node.value, _node$field), _range)
+          };
         };
 
         AstToElasticSearchQueryParser.prototype._createEqualExpression = function _createEqualExpression(node) {
           var v = node.value.trim().toLowerCase();
           var result = '';
           if (v.length >= 2) {
-            if (v.lastIndexOf("%") === v.length - 1) result = '{"prefix" : {"' + node.field + '":"' + v.substring(0, v.length - 1) + '"}}';else if (v.indexOf("%") === 0) result = '{"wildcard" : {"' + node.field + '":"*' + v.substring(1, v.length) + '"}}';
+            if (v.lastIndexOf("%") === v.length - 1) {
+              var _prefix;
+
+              result = {
+                "prefix": (_prefix = {}, _prefix[node.field] = v.substring(0, v.length - 1), _prefix)
+              };
+            } else if (v.indexOf("%") === 0) {
+              var _wildcard;
+
+              result = {
+                "wildcard": (_wildcard = {}, _wildcard[node.field] = "*" + v.substring(1, v.length), _wildcard)
+              };
+            }
           }
-          if (!result) result = '{"term" : {"' + node.field + '":"' + v + '"}}';
+
+          if (!result) {
+            if (v.split(' ').length > 1) {
+              var _match;
+
+              result = {
+                "match": (_match = {}, _match[node.field] = {
+                  "query": v,
+                  "operator": "and"
+                }, _match)
+              };
+            } else {
+              var _term;
+
+              result = {
+                "term": (_term = {}, _term[node.field] = v, _term)
+              };
+            }
+          }
           return result;
         };
 
