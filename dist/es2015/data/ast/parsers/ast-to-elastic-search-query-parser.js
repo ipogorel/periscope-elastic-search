@@ -12,12 +12,8 @@ export let AstToElasticSearchQueryParser = class AstToElasticSearchQueryParser e
   getFilter(astTree) {
     if (astTree[0]) {
       let result = {
-        "constant_score": {
-          "query": {
-            "bool": {
-              "must": this._parseTree(astTree[0], [])
-            }
-          }
+        "query_string": {
+          "query": this._parseTree(astTree[0], [])
         }
       };
       return JSON.stringify(result);
@@ -31,85 +27,55 @@ export let AstToElasticSearchQueryParser = class AstToElasticSearchQueryParser e
       result.push(this._createExpression(treeNode.connector, treeNode.left));
       if (treeNode.right) this._parseTree(treeNode.right, result);
     } else result.push(this._createExpression(treeNode.connector, treeNode));
-    return result;
+    return result.join(" ").trim();
   }
 
   _createExpression(connector, node) {
+    let result = "";
     let fieldname = node.field;
-    let operand = node.operand;
-    let value = node.value;
-    let res;
+    let operand = this._createEsStyleOperand(node.operand);
+    let v = node.value.trim();
+    let c = this._createEsStyleConnector(connector);
+    if (v.split(' ').length > 1) v = "\"" + v + "\"";else v = v.toLowerCase();
+
+    result = c + " " + fieldname + operand + v;
+    return result.trim();
+  }
+
+  _createEsStyleConnector(connector) {
+    if (!connector) return "";
+    switch (connector.trim()) {
+      case "||":
+        return "OR";
+      case "&&":
+        return "AND";
+      default:
+        return "";
+    }
+  }
+
+  _createEsStyleOperand(operand) {
+    let res = "";
     switch (operand) {
       case "==":
-        res = this._createEqualExpression(node);
+        res = ":";
         break;
       case "!=":
-        res = '{"term" : {"' + node.field + '":"' + node.value + '"}}';
+        res = res = ":!";
         break;
       case ">":
-        res = this._createRangeExpression(node, "gt");
+        res = ":>";
         break;
       case "<":
-        res = this._createRangeExpression(node, "lt");
+        res = ":<";
         break;
       case ">=":
-        res = this._createRangeExpression(node, "gte");
+        res = ":>=";
         break;
       case "<=":
-        res = this._createRangeExpression(node, "lte");
+        res = ":<=";
         break;
     }
     return res;
   }
-
-  _createRangeExpression(node, operand) {
-    return {
-      "range": {
-        [node.field]: {
-          [operand]: node.value
-        }
-      }
-    };
-  }
-
-  _createEqualExpression(node) {
-    let v = node.value.trim().toLowerCase();
-    let result = '';
-    if (v.length >= 2) {
-      if (v.lastIndexOf("%") === v.length - 1) {
-        result = {
-          "prefix": {
-            [node.field]: v.substring(0, v.length - 1)
-          }
-        };
-      } else if (v.indexOf("%") === 0) {
-        result = {
-          "wildcard": {
-            [node.field]: "*" + v.substring(1, v.length)
-          }
-        };
-      }
-    }
-
-    if (!result) {
-      if (v.split(' ').length > 1) {
-        result = {
-          "match": {
-            [node.field]: {
-              "query": v,
-              "operator": "and"
-            }
-          }
-        };
-      } else {
-        result = {
-          "term": {
-            [node.field]: v
-          }
-        };
-      }
-    }
-    return result;
-  }
-
 };

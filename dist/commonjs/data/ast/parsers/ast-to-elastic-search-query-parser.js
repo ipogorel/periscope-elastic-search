@@ -27,12 +27,8 @@ var AstToElasticSearchQueryParser = exports.AstToElasticSearchQueryParser = func
   AstToElasticSearchQueryParser.prototype.getFilter = function getFilter(astTree) {
     if (astTree[0]) {
       var result = {
-        "constant_score": {
-          "query": {
-            "bool": {
-              "must": this._parseTree(astTree[0], [])
-            }
-          }
+        "query_string": {
+          "query": this._parseTree(astTree[0], [])
         }
       };
       return JSON.stringify(result);
@@ -46,83 +42,56 @@ var AstToElasticSearchQueryParser = exports.AstToElasticSearchQueryParser = func
       result.push(this._createExpression(treeNode.connector, treeNode.left));
       if (treeNode.right) this._parseTree(treeNode.right, result);
     } else result.push(this._createExpression(treeNode.connector, treeNode));
-    return result;
+    return result.join(" ").trim();
   };
 
   AstToElasticSearchQueryParser.prototype._createExpression = function _createExpression(connector, node) {
+    var result = "";
     var fieldname = node.field;
-    var operand = node.operand;
-    var value = node.value;
-    var res = void 0;
+    var operand = this._createEsStyleOperand(node.operand);
+    var v = node.value.trim();
+    var c = this._createEsStyleConnector(connector);
+    if (v.split(' ').length > 1) v = "\"" + v + "\"";else v = v.toLowerCase();
+
+    result = c + " " + fieldname + operand + v;
+    return result.trim();
+  };
+
+  AstToElasticSearchQueryParser.prototype._createEsStyleConnector = function _createEsStyleConnector(connector) {
+    if (!connector) return "";
+    switch (connector.trim()) {
+      case "||":
+        return "OR";
+      case "&&":
+        return "AND";
+      default:
+        return "";
+    }
+  };
+
+  AstToElasticSearchQueryParser.prototype._createEsStyleOperand = function _createEsStyleOperand(operand) {
+    var res = "";
     switch (operand) {
       case "==":
-        res = this._createEqualExpression(node);
+        res = ":";
         break;
       case "!=":
-        res = '{"term" : {"' + node.field + '":"' + node.value + '"}}';
+        res = res = ":!";
         break;
       case ">":
-        res = this._createRangeExpression(node, "gt");
+        res = ":>";
         break;
       case "<":
-        res = this._createRangeExpression(node, "lt");
+        res = ":<";
         break;
       case ">=":
-        res = this._createRangeExpression(node, "gte");
+        res = ":>=";
         break;
       case "<=":
-        res = this._createRangeExpression(node, "lte");
+        res = ":<=";
         break;
     }
     return res;
-  };
-
-  AstToElasticSearchQueryParser.prototype._createRangeExpression = function _createRangeExpression(node, operand) {
-    var _node$field, _range;
-
-    return {
-      "range": (_range = {}, _range[node.field] = (_node$field = {}, _node$field[operand] = node.value, _node$field), _range)
-    };
-  };
-
-  AstToElasticSearchQueryParser.prototype._createEqualExpression = function _createEqualExpression(node) {
-    var v = node.value.trim().toLowerCase();
-    var result = '';
-    if (v.length >= 2) {
-      if (v.lastIndexOf("%") === v.length - 1) {
-        var _prefix;
-
-        result = {
-          "prefix": (_prefix = {}, _prefix[node.field] = v.substring(0, v.length - 1), _prefix)
-        };
-      } else if (v.indexOf("%") === 0) {
-        var _wildcard;
-
-        result = {
-          "wildcard": (_wildcard = {}, _wildcard[node.field] = "*" + v.substring(1, v.length), _wildcard)
-        };
-      }
-    }
-
-    if (!result) {
-      if (v.split(' ').length > 1) {
-        var _match;
-
-        result = {
-          "match": (_match = {}, _match[node.field] = {
-            "query": v,
-            "operator": "and"
-          }, _match)
-        };
-      } else {
-        var _term;
-
-        result = {
-          "term": (_term = {}, _term[node.field] = v, _term)
-        };
-      }
-    }
-    return result;
   };
 
   _createClass(AstToElasticSearchQueryParser, [{
