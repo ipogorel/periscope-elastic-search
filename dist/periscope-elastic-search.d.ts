@@ -2,8 +2,8 @@ declare module 'periscope-elastic-search' {
   import * as _ from 'lodash';
   import {
     DataService,
-    SchemaProvider,
-    AstParser
+    AstParser,
+    SchemaProvider
   } from 'periscope-framework';
   import {
     inject,
@@ -22,10 +22,6 @@ declare module 'periscope-elastic-search' {
     constructor(http: any);
     read(options: any): any;
   }
-  export class ElasticSearchSchemaProvider extends SchemaProvider {
-    constructor(http: any, host: any, index: any, type: any);
-    getSchema(): any;
-  }
   export class AstToElasticSearchQueryParser extends AstParser {
     constructor();
     type: any;
@@ -35,8 +31,12 @@ declare module 'periscope-elastic-search' {
     range(field: any, operand: any, value: any): any;
     wildcard(field: any, value: any): any;
     prefix(field: any, value: any): any;
-    terms(field: any, value: any): any;
+    terms(field: any, valuesArray: any): any;
     term(field: any, value: any): any;
     match(field: any, value: any): any;
+  }
+  export class ElasticSearchSchemaProvider extends SchemaProvider {
+    constructor(http: any, host: any, index: any, type: any);
+    getSchema(): any;
   }
 }

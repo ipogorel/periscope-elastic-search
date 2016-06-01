@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.ElasticSearchToDslTemplates = exports.AstToElasticSearchQueryParser = exports.ElasticSearchSchemaProvider = exports.ElasticSearchDataService = undefined;
+exports.ElasticSearchSchemaProvider = exports.ElasticSearchToDslTemplates = exports.AstToElasticSearchQueryParser = exports.ElasticSearchDataService = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -127,45 +127,6 @@ var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _a
 
   return ElasticSearchDataService;
 }(_periscopeFramework.DataService)) || _class) || _class);
-var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = (_dec3 = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient), _dec3(_class2 = function (_SchemaProvider) {
-  _inherits(ElasticSearchSchemaProvider, _SchemaProvider);
-
-  function ElasticSearchSchemaProvider(http, host, index, type) {
-    _classCallCheck(this, ElasticSearchSchemaProvider);
-
-    var _this3 = _possibleConstructorReturn(this, _SchemaProvider.call(this));
-
-    _this3.host = host;
-    _this3.index = index;
-    _this3.type = type;
-    http.configure(function (config) {
-      config.useStandardConfiguration();
-    });
-    _this3._http = http;
-    return _this3;
-  }
-
-  ElasticSearchSchemaProvider.prototype.getSchema = function getSchema() {
-    var _this4 = this;
-
-    return this._http.fetch(this.host + "_mappings/" + this.type).then(function (response) {
-      return response.json();
-    }).then(function (jsonData) {
-      var flds = jsonData[_this4.index].mappings[_this4.type].properties;
-      var result = [];
-      _.forOwn(flds, function (value, key) {
-        var t = value.type;
-        if (t === 'float') t = "number";
-        result.push({ field: key, type: t });
-      });
-      return {
-        fields: result
-      };
-    });
-  };
-
-  return ElasticSearchSchemaProvider;
-}(_periscopeFramework.SchemaProvider)) || _class2);
 
 var AstToElasticSearchQueryParser = exports.AstToElasticSearchQueryParser = function (_AstParser) {
   _inherits(AstToElasticSearchQueryParser, _AstParser);
@@ -173,10 +134,10 @@ var AstToElasticSearchQueryParser = exports.AstToElasticSearchQueryParser = func
   function AstToElasticSearchQueryParser() {
     _classCallCheck(this, AstToElasticSearchQueryParser);
 
-    var _this5 = _possibleConstructorReturn(this, _AstParser.call(this));
+    var _this3 = _possibleConstructorReturn(this, _AstParser.call(this));
 
-    _this5.templates = new ElasticSearchToDslTemplates();
-    return _this5;
+    _this3.templates = new ElasticSearchToDslTemplates();
+    return _this3;
   }
 
   AstToElasticSearchQueryParser.prototype.getFilter = function getFilter(astTree) {
@@ -193,30 +154,42 @@ var AstToElasticSearchQueryParser = exports.AstToElasticSearchQueryParser = func
   AstToElasticSearchQueryParser.prototype._parseTree = function _parseTree(treeNode, boolNode) {
     if (!treeNode.right) {
       var nLeft = treeNode.left ? treeNode.left : treeNode;
-      boolNode[this._detectMustNot(nLeft) ? "must_not" : "must"] = [this._createExpression(nLeft)];
+      boolNode["must"] = [this._createExpression(nLeft)];
       return;
     }
 
-    var leftOp = void 0;
-    if (this._detectMustNot(treeNode.left)) leftOp = "must_not";else if (treeNode.right.connector.trim() === "||") leftOp = "should";else leftOp = "must";
+    var lop = this._getOccurrenceType(treeNode, "left");
+    var rop = this._getOccurrenceType(treeNode, "right");
 
-    boolNode[leftOp] = [this._createExpression(treeNode.left)];
+    if (treeNode.left.right) {
+      boolNode[lop] = [{ bool: {} }];
+      this._parseTree(treeNode.left, boolNode[lop][0].bool);
+    } else boolNode[lop] = [this._createExpression(treeNode.left)];
+
     if (treeNode.right.left) {
-      boolNode[leftOp].push({ bool: {} });
-      this._parseTree(treeNode.right, boolNode[leftOp][1].bool);
+      boolNode[lop].push({ bool: {} });
+      this._parseTree(treeNode.right, boolNode[lop][1].bool);
     } else {
-      var rightOp = void 0;
-
-      if (this._detectMustNot(treeNode.right)) rightOp = "must_not";else if (treeNode.right.connector.trim() === "||") rightOp = "should";else rightOp = "must";
-
-      if (rightOp === leftOp) boolNode[rightOp].push(this._createExpression(treeNode.right));else boolNode[rightOp] = [this._createExpression(treeNode.right)];
-      return;
+      if (lop === rop) boolNode[rop].push(this._createExpression(treeNode.right));else boolNode[rop] = [this._createExpression(treeNode.right)];
     }
+    return;
   };
 
-  AstToElasticSearchQueryParser.prototype._detectMustNot = function _detectMustNot(node) {
-    if (node.operand.trim() === "!=") return true;
-    return false;
+  AstToElasticSearchQueryParser.prototype._getOccurrenceType = function _getOccurrenceType(treeNode, side) {
+    switch (side) {
+      case "left":
+        if (treeNode.left) {
+          if (treeNode.left.operand && treeNode.left.operand.trim() === "!=") return "must_not";else if (treeNode.right.connector.trim() === "||") return "should";
+        }
+        return "must";
+      case "right":
+        if (treeNode.right) {
+          if (treeNode.right.operand && treeNode.right.operand.trim() === "!=") return "must_not";else if (treeNode.right.connector.trim() === "||") return "should";
+        }
+        return "must";
+      default:
+        return "";
+    }
   };
 
   AstToElasticSearchQueryParser.prototype._createExpression = function _createExpression(node) {
@@ -243,7 +216,7 @@ var AstToElasticSearchQueryParser = exports.AstToElasticSearchQueryParser = func
   };
 
   AstToElasticSearchQueryParser.prototype._createEqualExpression = function _createEqualExpression(node) {
-    var v = node.value.trim().toLowerCase();
+    var v = node.value.trim();
     var result = '';
     if (v.length >= 2) {
       if (v.lastIndexOf("%") === v.length - 1) result = this.templates.prefix(node.field, v.substring(0, v.length - 1));else if (v.indexOf("%") === 0) result = this.templates.wildcard(node.field, "*" + v.substring(1, v.length));
@@ -298,7 +271,7 @@ var ElasticSearchToDslTemplates = exports.ElasticSearchToDslTemplates = function
     var _wildcard;
 
     return {
-      "wildcard": (_wildcard = {}, _wildcard[field] = value, _wildcard)
+      "wildcard": (_wildcard = {}, _wildcard[field] = value.toLowerCase(), _wildcard)
     };
   };
 
@@ -306,15 +279,17 @@ var ElasticSearchToDslTemplates = exports.ElasticSearchToDslTemplates = function
     var _prefix;
 
     return {
-      "prefix": (_prefix = {}, _prefix[field] = value, _prefix)
+      "prefix": (_prefix = {}, _prefix[field] = value.toLowerCase(), _prefix)
     };
   };
 
-  ElasticSearchToDslTemplates.prototype.terms = function terms(field, value) {
+  ElasticSearchToDslTemplates.prototype.terms = function terms(field, valuesArray) {
     var _terms;
 
     return {
-      "terms": (_terms = {}, _terms[field] = value, _terms)
+      "terms": (_terms = {}, _terms[field] = _.map(valuesArray, function (v) {
+        return v.toLowerCase();
+      }), _terms)
     };
   };
 
@@ -322,7 +297,7 @@ var ElasticSearchToDslTemplates = exports.ElasticSearchToDslTemplates = function
     var _term;
 
     return {
-      "term": (_term = {}, _term[field] = value, _term)
+      "term": (_term = {}, _term[field] = value.toLowerCase(), _term)
     };
   };
 
@@ -331,7 +306,7 @@ var ElasticSearchToDslTemplates = exports.ElasticSearchToDslTemplates = function
 
     return {
       "match": (_match = {}, _match[field] = {
-        "query": value,
+        "query": value.toLowerCase(),
         "operator": "and"
       }, _match)
     };
@@ -339,3 +314,43 @@ var ElasticSearchToDslTemplates = exports.ElasticSearchToDslTemplates = function
 
   return ElasticSearchToDslTemplates;
 }();
+
+var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = (_dec3 = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient), _dec3(_class2 = function (_SchemaProvider) {
+  _inherits(ElasticSearchSchemaProvider, _SchemaProvider);
+
+  function ElasticSearchSchemaProvider(http, host, index, type) {
+    _classCallCheck(this, ElasticSearchSchemaProvider);
+
+    var _this4 = _possibleConstructorReturn(this, _SchemaProvider.call(this));
+
+    _this4.host = host;
+    _this4.index = index;
+    _this4.type = type;
+    http.configure(function (config) {
+      config.useStandardConfiguration();
+    });
+    _this4._http = http;
+    return _this4;
+  }
+
+  ElasticSearchSchemaProvider.prototype.getSchema = function getSchema() {
+    var _this5 = this;
+
+    return this._http.fetch(this.host + "_mappings/" + this.type).then(function (response) {
+      return response.json();
+    }).then(function (jsonData) {
+      var flds = jsonData[_this5.index].mappings[_this5.type].properties;
+      var result = [];
+      _.forOwn(flds, function (value, key) {
+        var t = value.type;
+        if (t === 'float') t = "number";
+        result.push({ field: key, type: t });
+      });
+      return {
+        fields: result
+      };
+    });
+  };
+
+  return ElasticSearchSchemaProvider;
+}(_periscopeFramework.SchemaProvider)) || _class2);

@@ -1,9 +1,9 @@
 "use strict";
 
-System.register([], function (_export, _context) {
+System.register(["lodash"], function (_export, _context) {
   "use strict";
 
-  var ElasticSearchToDslTemplates;
+  var _, ElasticSearchToDslTemplates;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -12,7 +12,9 @@ System.register([], function (_export, _context) {
   }
 
   return {
-    setters: [],
+    setters: [function (_lodash) {
+      _ = _lodash;
+    }],
     execute: function () {
       _export("ElasticSearchToDslTemplates", ElasticSearchToDslTemplates = function () {
         function ElasticSearchToDslTemplates() {
@@ -46,7 +48,7 @@ System.register([], function (_export, _context) {
           var _wildcard;
 
           return {
-            "wildcard": (_wildcard = {}, _wildcard[field] = value, _wildcard)
+            "wildcard": (_wildcard = {}, _wildcard[field] = value.toLowerCase(), _wildcard)
           };
         };
 
@@ -54,15 +56,17 @@ System.register([], function (_export, _context) {
           var _prefix;
 
           return {
-            "prefix": (_prefix = {}, _prefix[field] = value, _prefix)
+            "prefix": (_prefix = {}, _prefix[field] = value.toLowerCase(), _prefix)
           };
         };
 
-        ElasticSearchToDslTemplates.prototype.terms = function terms(field, value) {
+        ElasticSearchToDslTemplates.prototype.terms = function terms(field, valuesArray) {
           var _terms;
 
           return {
-            "terms": (_terms = {}, _terms[field] = value, _terms)
+            "terms": (_terms = {}, _terms[field] = _.map(valuesArray, function (v) {
+              return v.toLowerCase();
+            }), _terms)
           };
         };
 
@@ -70,7 +74,7 @@ System.register([], function (_export, _context) {
           var _term;
 
           return {
-            "term": (_term = {}, _term[field] = value, _term)
+            "term": (_term = {}, _term[field] = value.toLowerCase(), _term)
           };
         };
 
@@ -79,7 +83,7 @@ System.register([], function (_export, _context) {
 
           return {
             "match": (_match = {}, _match[field] = {
-              "query": value,
+              "query": value.toLowerCase(),
               "operator": "and"
             }, _match)
           };

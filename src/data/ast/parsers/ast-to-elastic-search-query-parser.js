@@ -22,50 +22,59 @@ export class AstToElasticSearchQueryParser extends AstParser{
     return "";
   }
 
+
   _parseTree(treeNode, boolNode){
     if (!treeNode.right){
       let nLeft = treeNode.left?treeNode.left:treeNode;
-      boolNode[this._detectMustNot(nLeft)?"must_not":"must"] = [this._createExpression(nLeft)];
+      boolNode["must"] = [this._createExpression(nLeft)];
       return;
     }
 
-    let leftOp;
-    if (this._detectMustNot(treeNode.left))
-      leftOp = "must_not";
-    else if (treeNode.right.connector.trim() === "||")
-      leftOp = "should";
-    else
-      leftOp = "must";
+    let lop = this._getOccurrenceType(treeNode,"left");
+    let rop = this._getOccurrenceType(treeNode,"right");
 
-    boolNode[leftOp] = [this._createExpression(treeNode.left)];
-    if (treeNode.right.left){
-      boolNode[leftOp].push({bool:{}});
-      this._parseTree(treeNode.right, boolNode[leftOp][1].bool);
+    if (treeNode.left.right) { // left node contain subbranches
+      boolNode[lop] =[{bool: {}}];
+      this._parseTree(treeNode.left, boolNode[lop][0].bool);
     }
-    else {
-      let rightOp;
+    else // left node contain expression
+      boolNode[lop] = [this._createExpression(treeNode.left)];
 
-      if (this._detectMustNot(treeNode.right))
-        rightOp = "must_not";
-      else if (treeNode.right.connector.trim() === "||")
-        rightOp = "should";
-      else
-        rightOp = "must";
-
-      if (rightOp===leftOp)
-        boolNode[rightOp].push(this._createExpression(treeNode.right));
-      else
-        boolNode[rightOp] = [this._createExpression(treeNode.right)];
-      return;
+    if (treeNode.right.left){ // right node contain subbranches
+      boolNode[lop].push({bool:{}});
+      this._parseTree(treeNode.right, boolNode[lop][1].bool);
     }
+    else {// right node contain expression
+      if (lop===rop)
+        boolNode[rop].push(this._createExpression(treeNode.right));
+      else
+        boolNode[rop] = [this._createExpression(treeNode.right)];
+    }
+    return;
   }
 
-  _detectMustNot(node){
-    if (node.operand.trim()==="!=")
-      return true;
-    return false;
+  _getOccurrenceType(treeNode, side){
+    switch(side){
+      case "left":
+        if (treeNode.left) {
+          if (treeNode.left.operand && treeNode.left.operand.trim() === "!=")
+            return "must_not";
+          else if (treeNode.right.connector.trim() === "||")
+            return "should";
+        }
+        return "must";
+      case "right":
+        if (treeNode.right) {
+          if (treeNode.right.operand && treeNode.right.operand.trim() === "!=")
+            return "must_not";
+          else if (treeNode.right.connector.trim() === "||")
+            return "should";
+        }
+        return "must";
+      default:
+        return "";
+    }
   }
-
 
   _createExpression(node){
     let fieldname = node.field;
@@ -92,7 +101,7 @@ export class AstToElasticSearchQueryParser extends AstParser{
 
 
   _createEqualExpression(node){
-    let v = node.value.trim().toLowerCase();
+    let v = node.value.trim();
     let result = '';
     if (v.length>=2){
       if (v.lastIndexOf("%")===(v.length-1))

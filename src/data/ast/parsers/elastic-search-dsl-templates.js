@@ -1,6 +1,8 @@
+import * as _ from 'lodash';
+
 export class ElasticSearchToDslTemplates{
 
-  range (field, operand, value) {
+  range(field, operand, value){
     let o = "";
     switch (operand){
       case ">":
@@ -28,22 +30,24 @@ export class ElasticSearchToDslTemplates{
   wildcard(field, value){
     return {
       "wildcard": {
-        [field]: value,
+        [field]: value.toLowerCase(),
       }
     };
   }
   prefix(field, value){
     return {
       "prefix": {
-        [field]: value,
+        [field]: value.toLowerCase(),
       }
     };
   }
 
-  terms(field, value){
+  terms(field, valuesArray){
     return {
       "terms": {
-        [field]: value
+        [field]: _.map(valuesArray,v=>{
+          return v.toLowerCase();
+        })
       }
     }
   }
@@ -52,7 +56,7 @@ export class ElasticSearchToDslTemplates{
   term(field, value){
     return {
       "term": {
-        [field]: value
+        [field]: value.toLowerCase()
       }
     }
   }
@@ -61,7 +65,7 @@ export class ElasticSearchToDslTemplates{
     return {
       "match": {
         [field]:{
-          "query":value,
+          "query":value.toLowerCase(),
           "operator": "and"
         }
       }

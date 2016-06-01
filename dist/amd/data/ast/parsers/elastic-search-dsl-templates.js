@@ -1,9 +1,29 @@
-define(["exports"], function (exports) {
+define(["exports", "lodash"], function (exports, _lodash) {
   "use strict";
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
+  exports.ElasticSearchToDslTemplates = undefined;
+
+  var _ = _interopRequireWildcard(_lodash);
+
+  function _interopRequireWildcard(obj) {
+    if (obj && obj.__esModule) {
+      return obj;
+    } else {
+      var newObj = {};
+
+      if (obj != null) {
+        for (var key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
+        }
+      }
+
+      newObj.default = obj;
+      return newObj;
+    }
+  }
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -43,7 +63,7 @@ define(["exports"], function (exports) {
       var _wildcard;
 
       return {
-        "wildcard": (_wildcard = {}, _wildcard[field] = value, _wildcard)
+        "wildcard": (_wildcard = {}, _wildcard[field] = value.toLowerCase(), _wildcard)
       };
     };
 
@@ -51,15 +71,17 @@ define(["exports"], function (exports) {
       var _prefix;
 
       return {
-        "prefix": (_prefix = {}, _prefix[field] = value, _prefix)
+        "prefix": (_prefix = {}, _prefix[field] = value.toLowerCase(), _prefix)
       };
     };
 
-    ElasticSearchToDslTemplates.prototype.terms = function terms(field, value) {
+    ElasticSearchToDslTemplates.prototype.terms = function terms(field, valuesArray) {
       var _terms;
 
       return {
-        "terms": (_terms = {}, _terms[field] = value, _terms)
+        "terms": (_terms = {}, _terms[field] = _.map(valuesArray, function (v) {
+          return v.toLowerCase();
+        }), _terms)
       };
     };
 
@@ -67,7 +89,7 @@ define(["exports"], function (exports) {
       var _term;
 
       return {
-        "term": (_term = {}, _term[field] = value, _term)
+        "term": (_term = {}, _term[field] = value.toLowerCase(), _term)
       };
     };
 
@@ -76,7 +98,7 @@ define(["exports"], function (exports) {
 
       return {
         "match": (_match = {}, _match[field] = {
-          "query": value,
+          "query": value.toLowerCase(),
           "operator": "and"
         }, _match)
       };

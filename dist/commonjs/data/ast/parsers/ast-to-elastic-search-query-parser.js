@@ -43,30 +43,42 @@ var AstToElasticSearchQueryParser = exports.AstToElasticSearchQueryParser = func
   AstToElasticSearchQueryParser.prototype._parseTree = function _parseTree(treeNode, boolNode) {
     if (!treeNode.right) {
       var nLeft = treeNode.left ? treeNode.left : treeNode;
-      boolNode[this._detectMustNot(nLeft) ? "must_not" : "must"] = [this._createExpression(nLeft)];
+      boolNode["must"] = [this._createExpression(nLeft)];
       return;
     }
 
-    var leftOp = void 0;
-    if (this._detectMustNot(treeNode.left)) leftOp = "must_not";else if (treeNode.right.connector.trim() === "||") leftOp = "should";else leftOp = "must";
+    var lop = this._getOccurrenceType(treeNode, "left");
+    var rop = this._getOccurrenceType(treeNode, "right");
 
-    boolNode[leftOp] = [this._createExpression(treeNode.left)];
+    if (treeNode.left.right) {
+      boolNode[lop] = [{ bool: {} }];
+      this._parseTree(treeNode.left, boolNode[lop][0].bool);
+    } else boolNode[lop] = [this._createExpression(treeNode.left)];
+
     if (treeNode.right.left) {
-      boolNode[leftOp].push({ bool: {} });
-      this._parseTree(treeNode.right, boolNode[leftOp][1].bool);
+      boolNode[lop].push({ bool: {} });
+      this._parseTree(treeNode.right, boolNode[lop][1].bool);
     } else {
-      var rightOp = void 0;
-
-      if (this._detectMustNot(treeNode.right)) rightOp = "must_not";else if (treeNode.right.connector.trim() === "||") rightOp = "should";else rightOp = "must";
-
-      if (rightOp === leftOp) boolNode[rightOp].push(this._createExpression(treeNode.right));else boolNode[rightOp] = [this._createExpression(treeNode.right)];
-      return;
+      if (lop === rop) boolNode[rop].push(this._createExpression(treeNode.right));else boolNode[rop] = [this._createExpression(treeNode.right)];
     }
+    return;
   };
 
-  AstToElasticSearchQueryParser.prototype._detectMustNot = function _detectMustNot(node) {
-    if (node.operand.trim() === "!=") return true;
-    return false;
+  AstToElasticSearchQueryParser.prototype._getOccurrenceType = function _getOccurrenceType(treeNode, side) {
+    switch (side) {
+      case "left":
+        if (treeNode.left) {
+          if (treeNode.left.operand && treeNode.left.operand.trim() === "!=") return "must_not";else if (treeNode.right.connector.trim() === "||") return "should";
+        }
+        return "must";
+      case "right":
+        if (treeNode.right) {
+          if (treeNode.right.operand && treeNode.right.operand.trim() === "!=") return "must_not";else if (treeNode.right.connector.trim() === "||") return "should";
+        }
+        return "must";
+      default:
+        return "";
+    }
   };
 
   AstToElasticSearchQueryParser.prototype._createExpression = function _createExpression(node) {
@@ -93,7 +105,7 @@ var AstToElasticSearchQueryParser = exports.AstToElasticSearchQueryParser = func
   };
 
   AstToElasticSearchQueryParser.prototype._createEqualExpression = function _createEqualExpression(node) {
-    var v = node.value.trim().toLowerCase();
+    var v = node.value.trim();
     var result = '';
     if (v.length >= 2) {
       if (v.lastIndexOf("%") === v.length - 1) result = this.templates.prefix(node.field, v.substring(0, v.length - 1));else if (v.indexOf("%") === 0) result = this.templates.wildcard(node.field, "*" + v.substring(1, v.length));
