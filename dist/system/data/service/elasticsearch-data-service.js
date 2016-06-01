@@ -69,7 +69,7 @@ System.register(['periscope-framework', 'aurelia-framework', 'aurelia-fetch-clie
           var url = this.url + "_search";
           var request = {};
           if (options.fields) request._source = { include: options.fields };
-          if (options.filter && options.filter.length > 0) request.query = JSON.parse(this.filterParser.getFilter(options.filter));
+          if (options.filter) request.query = JSON.parse(this.filterParser.getFilter(options.filter));
           if (options.take) request.size = options.take;
           if (options.skip) request.from = options.skip;
           if (options.sort) {
@@ -84,6 +84,7 @@ System.register(['periscope-framework', 'aurelia-framework', 'aurelia-fetch-clie
             method: 'post',
             body: json(request)
           }).then(function (response) {
+            var a = 2;
             return response.json();
           }).then(function (jsonData) {
             var d = _.map(jsonData.hits.hits, "_source");

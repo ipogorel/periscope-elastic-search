@@ -1,8 +1,9 @@
 import * as _ from 'lodash';
-import {DataService,AstParser,SchemaProvider} from 'periscope-framework';
+import {DataService,SchemaProvider,AstParser} from 'periscope-framework';
 import {inject,transient} from 'aurelia-framework';
 import {HttpClient,json} from 'aurelia-fetch-client';
 
+export * from './data/ast/parsers/elastic-search-dsl-templates';
 export * from './data/ast/parsers/ast-to-elastic-search-query-parser';
 export * from './data/schema/providers/elastic-search-schema-provider';
 export * from './data/service/elasticsearch-data-service';
@@ -27,7 +28,7 @@ export class ElasticSearchDataService extends DataService {
     let request = {};
     if (options.fields)
       request._source = {include: options.fields};
-    if (options.filter && options.filter.length>0)
+    if (options.filter)
       request.query = JSON.parse(this.filterParser.getFilter(options.filter));
     if (options.take)
       request.size = options.take;
@@ -43,14 +44,18 @@ export class ElasticSearchDataService extends DataService {
       }
     }
 
-    //request.query = {"prefix": {"ProductName" : "contoso"}};
+    //request.query = {"bool":{"must":[{"terms":{"Weight":["4.5","2.5"]}}]}};
+
 
     return this._http
       .fetch(url,{
         method: 'post',
         body: json(request)
       })
-      .then(response => {return response.json(); })
+      .then(response => {
+        var a = 2;
+        return response.json();
+      })
       .then(jsonData => {
         //let d = (this.dataMapper? this.dataMapper(jsonData) : _.map(jsonData.hits.hits,"_source"));
         let d = _.map(jsonData.hits.hits,"_source");
@@ -59,93 +64,6 @@ export class ElasticSearchDataService extends DataService {
           total: (this.totalMapper? this.totalMapper(jsonData) : jsonData.hits.total)
         }
       });
-  }
-}
-
-export class AstToElasticSearchQueryParser extends AstParser{
-  constructor(){
-    super();
-  }
-
-  get type(){
-    return this._serverSide;
-  }
-
-  getFilter(astTree) {
-    if (astTree[0]) {
-      let result = {
-        "query_string": {
-          "query": this._parseTree(astTree[0], [])
-        }
-      }
-      return JSON.stringify(result);
-    }
-    return "";
-  }
-
-  _parseTree(treeNode, result){
-
-    if (treeNode.left) {
-      result.push(this._createExpression(treeNode.connector, treeNode.left));
-      if (treeNode.right)
-        this._parseTree(treeNode.right, result);
-    }
-    else
-      result.push(this._createExpression(treeNode.connector, treeNode));
-    return result.join(" ").trim();
-  }
-
-  _createExpression(connector, node){
-    let result = "";
-    let fieldname = node.field;
-    let operand = this._createEsStyleOperand(node.operand);
-    let v = node.value.trim();
-    let c = this._createEsStyleConnector(connector)
-    if (v.split(' ').length>1) // multiple words
-      v = "\"" + v + "\""
-    else
-      v = v.toLowerCase();
-
-    result= c + " " + fieldname + operand + v;
-    return result.trim();
-  }
-
-  _createEsStyleConnector(connector){
-    if (!connector)
-      return "";
-    switch (connector.trim()){
-      case "||":
-        return "OR"
-      case "&&":
-        return "AND"
-      default:
-        return "";
-    }
-  }
-
-  _createEsStyleOperand(operand){
-    let res = "";
-    switch (operand){
-      case "==":
-        res = ":";
-        break;
-      case "!=":
-        res = res = ":!";
-        break;
-      case ">":
-        res = ":>";
-        break;
-      case "<":
-        res = ":<";
-        break;
-      case ">=":
-        res = ":>=";
-        break;
-      case "<=":
-        res = ":<=";
-        break;
-    }
-    return res;
   }
 }
 
@@ -178,6 +96,188 @@ export class ElasticSearchSchemaProvider extends SchemaProvider{
           fields:result
         }
       });
+  }
+}
+
+
+export class AstToElasticSearchQueryParser extends AstParser{
+  constructor(){
+    super();
+    this.templates = new ElasticSearchToDslTemplates();
+  }
+
+  get type(){
+    return this._serverSide;
+  }
+
+  getFilter(astTree) {
+    if (astTree) {
+      let result = {
+        bool:{}
+      }
+      this._parseTree(astTree, result.bool)
+      return JSON.stringify(result);
+    }
+    return "";
+  }
+
+  _parseTree(treeNode, boolNode){
+    if (!treeNode.right){
+      let nLeft = treeNode.left?treeNode.left:treeNode;
+      boolNode[this._detectMustNot(nLeft)?"must_not":"must"] = [this._createExpression(nLeft)];
+      return;
+    }
+
+    let leftOp;
+    if (this._detectMustNot(treeNode.left))
+      leftOp = "must_not";
+    else if (treeNode.right.connector.trim() === "||")
+      leftOp = "should";
+    else
+      leftOp = "must";
+
+    boolNode[leftOp] = [this._createExpression(treeNode.left)];
+    if (treeNode.right.left){
+      boolNode[leftOp].push({bool:{}});
+      this._parseTree(treeNode.right, boolNode[leftOp][1].bool);
+    }
+    else {
+      let rightOp;
+
+      if (this._detectMustNot(treeNode.right))
+        rightOp = "must_not";
+      else if (treeNode.right.connector.trim() === "||")
+        rightOp = "should";
+      else
+        rightOp = "must";
+
+      if (rightOp===leftOp)
+        boolNode[rightOp].push(this._createExpression(treeNode.right));
+      else
+        boolNode[rightOp] = [this._createExpression(treeNode.right)];
+      return;
+    }
+  }
+
+  _detectMustNot(node){
+    if (node.operand.trim()==="!=")
+      return true;
+    return false;
+  }
+
+
+  _createExpression(node){
+    let fieldname = node.field;
+    let operand = node.operand;
+    let value = node.value;
+    let res;
+    switch (operand){
+      case "==":
+      case "!=":
+        res = this._createEqualExpression(node);
+        break;
+      case ">":
+      case "<":
+      case ">=":
+      case "<=":
+        res = this.templates.range(fieldname, operand, value);
+        break;
+      case "in":
+        res = this.templates.terms(fieldname, value);
+        break;
+    }
+    return res;
+  }
+
+
+  _createEqualExpression(node){
+    let v = node.value.trim().toLowerCase();
+    let result = '';
+    if (v.length>=2){
+      if (v.lastIndexOf("%")===(v.length-1))
+        result = this.templates.prefix(node.field, v.substring(0, v.length - 1));
+      else if (v.indexOf("%")===0)
+        result = this.templates.wildcard(node.field, "*" + v.substring(1, v.length));
+    }
+    if (!result){
+      if (v.split(' ').length>1) {  //multi word search!
+        result = this.templates.match(node.field, v);
+      }
+      else  // single word search
+        result = this.templates.term(node.field, v)
+    }
+    return result;
+  }
+}
+
+export class ElasticSearchToDslTemplates{
+
+  range (field, operand, value) {
+    let o = "";
+    switch (operand){
+      case ">":
+        o ="gt";
+        break;
+      case "<":
+        o = "lt";
+        break;
+      case ">=":
+        o = "gte";
+        break;
+      case "<=":
+        o = "lte";
+        break;
+    }
+    return {
+      "range": {
+        [field]: {
+          [o]: value
+        },
+      }
+    };
+  }
+
+  wildcard(field, value){
+    return {
+      "wildcard": {
+        [field]: value,
+      }
+    };
+  }
+  prefix(field, value){
+    return {
+      "prefix": {
+        [field]: value,
+      }
+    };
+  }
+
+  terms(field, value){
+    return {
+      "terms": {
+        [field]: value
+      }
+    }
+  }
+
+
+  term(field, value){
+    return {
+      "term": {
+        [field]: value
+      }
+    }
+  }
+
+  match(field, value){
+    return {
+      "match": {
+        [field]:{
+          "query":value,
+          "operator": "and"
+        }
+      }
+    };
   }
 }
 

@@ -18,7 +18,7 @@ export let ElasticSearchDataService = (_dec = transient(), _dec2 = inject(HttpCl
     let url = this.url + "_search";
     let request = {};
     if (options.fields) request._source = { include: options.fields };
-    if (options.filter && options.filter.length > 0) request.query = JSON.parse(this.filterParser.getFilter(options.filter));
+    if (options.filter) request.query = JSON.parse(this.filterParser.getFilter(options.filter));
     if (options.take) request.size = options.take;
     if (options.skip) request.from = options.skip;
     if (options.sort) {
@@ -33,6 +33,7 @@ export let ElasticSearchDataService = (_dec = transient(), _dec2 = inject(HttpCl
       method: 'post',
       body: json(request)
     }).then(response => {
+      var a = 2;
       return response.json();
     }).then(jsonData => {
       let d = _.map(jsonData.hits.hits, "_source");

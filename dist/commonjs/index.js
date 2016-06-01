@@ -4,6 +4,18 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _elasticSearchDslTemplates = require('./data/ast/parsers/elastic-search-dsl-templates');
+
+Object.keys(_elasticSearchDslTemplates).forEach(function (key) {
+  if (key === "default") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _elasticSearchDslTemplates[key];
+    }
+  });
+});
+
 var _astToElasticSearchQueryParser = require('./data/ast/parsers/ast-to-elastic-search-query-parser');
 
 Object.keys(_astToElasticSearchQueryParser).forEach(function (key) {

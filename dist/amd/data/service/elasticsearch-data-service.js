@@ -78,7 +78,7 @@ define(['exports', 'periscope-framework', 'aurelia-framework', 'aurelia-fetch-cl
       var url = this.url + "_search";
       var request = {};
       if (options.fields) request._source = { include: options.fields };
-      if (options.filter && options.filter.length > 0) request.query = JSON.parse(this.filterParser.getFilter(options.filter));
+      if (options.filter) request.query = JSON.parse(this.filterParser.getFilter(options.filter));
       if (options.take) request.size = options.take;
       if (options.skip) request.from = options.skip;
       if (options.sort) {
@@ -93,6 +93,7 @@ define(['exports', 'periscope-framework', 'aurelia-framework', 'aurelia-fetch-cl
         method: 'post',
         body: (0, _aureliaFetchClient.json)(request)
       }).then(function (response) {
+        var a = 2;
         return response.json();
       }).then(function (jsonData) {
         var d = _.map(jsonData.hits.hits, "_source");

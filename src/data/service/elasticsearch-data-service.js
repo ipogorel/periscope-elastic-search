@@ -19,7 +19,7 @@ export class ElasticSearchDataService extends DataService {
     let request = {};
     if (options.fields)
       request._source = {include: options.fields};
-    if (options.filter && options.filter.length>0)
+    if (options.filter)
       request.query = JSON.parse(this.filterParser.getFilter(options.filter));
     if (options.take)
       request.size = options.take;
@@ -35,14 +35,18 @@ export class ElasticSearchDataService extends DataService {
       }
     }
 
-    //request.query = {"prefix": {"ProductName" : "contoso"}};
+    //request.query = {"bool":{"must":[{"terms":{"Weight":["4.5","2.5"]}}]}};
+
 
     return this._http
       .fetch(url,{
         method: 'post',
         body: json(request)
       })
-      .then(response => {return response.json(); })
+      .then(response => {
+        var a = 2;
+        return response.json();
+      })
       .then(jsonData => {
         //let d = (this.dataMapper? this.dataMapper(jsonData) : _.map(jsonData.hits.hits,"_source"));
         let d = _.map(jsonData.hits.hits,"_source");

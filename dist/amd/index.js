@@ -1,8 +1,17 @@
-define(['exports', './data/ast/parsers/ast-to-elastic-search-query-parser', './data/schema/providers/elastic-search-schema-provider', './data/service/elasticsearch-data-service'], function (exports, _astToElasticSearchQueryParser, _elasticSearchSchemaProvider, _elasticsearchDataService) {
+define(['exports', './data/ast/parsers/elastic-search-dsl-templates', './data/ast/parsers/ast-to-elastic-search-query-parser', './data/schema/providers/elastic-search-schema-provider', './data/service/elasticsearch-data-service'], function (exports, _elasticSearchDslTemplates, _astToElasticSearchQueryParser, _elasticSearchSchemaProvider, _elasticsearchDataService) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
     value: true
+  });
+  Object.keys(_elasticSearchDslTemplates).forEach(function (key) {
+    if (key === "default") return;
+    Object.defineProperty(exports, key, {
+      enumerable: true,
+      get: function () {
+        return _elasticSearchDslTemplates[key];
+      }
+    });
   });
   Object.keys(_astToElasticSearchQueryParser).forEach(function (key) {
     if (key === "default") return;
