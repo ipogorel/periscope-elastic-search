@@ -55,21 +55,15 @@ define(['exports', 'periscope-framework', 'aurelia-framework', 'aurelia-fetch-cl
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 
-  var _dec, _dec2, _class;
+  var _dec, _class;
 
-  var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _aureliaFramework.transient)(), _dec2 = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient), _dec(_class = _dec2(_class = function (_DataService) {
+  var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _aureliaFramework.transient)(), _dec(_class = function (_DataService) {
     _inherits(ElasticSearchDataService, _DataService);
 
-    function ElasticSearchDataService(http) {
+    function ElasticSearchDataService() {
       _classCallCheck(this, ElasticSearchDataService);
 
-      var _this = _possibleConstructorReturn(this, _DataService.call(this));
-
-      http.configure(function (config) {
-        config.useStandardConfiguration();
-      });
-      _this._http = http;
-      return _this;
+      return _possibleConstructorReturn(this, _DataService.call(this));
     }
 
     ElasticSearchDataService.prototype.read = function read(options) {
@@ -89,7 +83,7 @@ define(['exports', 'periscope-framework', 'aurelia-framework', 'aurelia-fetch-cl
         }
       }
 
-      return this._http.fetch(url, {
+      return this.httpClient.fetch(url, {
         method: 'post',
         body: (0, _aureliaFetchClient.json)(request)
       }).then(function (response) {
@@ -105,5 +99,5 @@ define(['exports', 'periscope-framework', 'aurelia-framework', 'aurelia-fetch-cl
     };
 
     return ElasticSearchDataService;
-  }(_periscopeFramework.DataService)) || _class) || _class);
+  }(_periscopeFramework.DataService)) || _class);
 });

@@ -1,17 +1,12 @@
 import {DataService} from 'periscope-framework';
-import {inject, transient} from 'aurelia-framework';
-import {HttpClient, json} from 'aurelia-fetch-client';
+import {transient} from 'aurelia-framework';
+import {json} from 'aurelia-fetch-client';
 import * as _ from 'lodash';
 
 @transient()
-@inject(HttpClient)
 export class ElasticSearchDataService extends DataService {
-  constructor(http) {
+  constructor() {
     super();
-    http.configure(config => {
-      config.useStandardConfiguration();
-    });
-    this._http = http;
   }
 
   read(options) { //options: fields,filter, take, skip, sort
@@ -35,10 +30,8 @@ export class ElasticSearchDataService extends DataService {
       }
     }
 
-    //request.query = {"bool":{"must":[{"terms":{"Weight":["4.5","2.5"]}}]}};
 
-
-    return this._http
+    return this.httpClient
       .fetch(url,{
         method: 'post',
         body: json(request)

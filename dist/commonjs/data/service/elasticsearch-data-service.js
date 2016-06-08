@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ElasticSearchDataService = undefined;
 
-var _dec, _dec2, _class;
+var _dec, _class;
 
 var _periscopeFramework = require('periscope-framework');
 
@@ -25,19 +25,13 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _aureliaFramework.transient)(), _dec2 = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient), _dec(_class = _dec2(_class = function (_DataService) {
+var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _aureliaFramework.transient)(), _dec(_class = function (_DataService) {
   _inherits(ElasticSearchDataService, _DataService);
 
-  function ElasticSearchDataService(http) {
+  function ElasticSearchDataService() {
     _classCallCheck(this, ElasticSearchDataService);
 
-    var _this = _possibleConstructorReturn(this, _DataService.call(this));
-
-    http.configure(function (config) {
-      config.useStandardConfiguration();
-    });
-    _this._http = http;
-    return _this;
+    return _possibleConstructorReturn(this, _DataService.call(this));
   }
 
   ElasticSearchDataService.prototype.read = function read(options) {
@@ -57,7 +51,7 @@ var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _a
       }
     }
 
-    return this._http.fetch(url, {
+    return this.httpClient.fetch(url, {
       method: 'post',
       body: (0, _aureliaFetchClient.json)(request)
     }).then(function (response) {
@@ -73,4 +67,4 @@ var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _a
   };
 
   return ElasticSearchDataService;
-}(_periscopeFramework.DataService)) || _class) || _class);
+}(_periscopeFramework.DataService)) || _class);

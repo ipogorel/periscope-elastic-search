@@ -3,7 +3,7 @@
 System.register(['periscope-framework', 'aurelia-framework', 'aurelia-fetch-client', 'lodash'], function (_export, _context) {
   "use strict";
 
-  var DataService, inject, transient, HttpClient, json, _, _dec, _dec2, _class, ElasticSearchDataService;
+  var DataService, transient, json, _, _dec, _class, ElasticSearchDataService;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -39,28 +39,20 @@ System.register(['periscope-framework', 'aurelia-framework', 'aurelia-fetch-clie
     setters: [function (_periscopeFramework) {
       DataService = _periscopeFramework.DataService;
     }, function (_aureliaFramework) {
-      inject = _aureliaFramework.inject;
       transient = _aureliaFramework.transient;
     }, function (_aureliaFetchClient) {
-      HttpClient = _aureliaFetchClient.HttpClient;
       json = _aureliaFetchClient.json;
     }, function (_lodash) {
       _ = _lodash;
     }],
     execute: function () {
-      _export('ElasticSearchDataService', ElasticSearchDataService = (_dec = transient(), _dec2 = inject(HttpClient), _dec(_class = _dec2(_class = function (_DataService) {
+      _export('ElasticSearchDataService', ElasticSearchDataService = (_dec = transient(), _dec(_class = function (_DataService) {
         _inherits(ElasticSearchDataService, _DataService);
 
-        function ElasticSearchDataService(http) {
+        function ElasticSearchDataService() {
           _classCallCheck(this, ElasticSearchDataService);
 
-          var _this = _possibleConstructorReturn(this, _DataService.call(this));
-
-          http.configure(function (config) {
-            config.useStandardConfiguration();
-          });
-          _this._http = http;
-          return _this;
+          return _possibleConstructorReturn(this, _DataService.call(this));
         }
 
         ElasticSearchDataService.prototype.read = function read(options) {
@@ -80,7 +72,7 @@ System.register(['periscope-framework', 'aurelia-framework', 'aurelia-fetch-clie
             }
           }
 
-          return this._http.fetch(url, {
+          return this.httpClient.fetch(url, {
             method: 'post',
             body: json(request)
           }).then(function (response) {
@@ -96,7 +88,7 @@ System.register(['periscope-framework', 'aurelia-framework', 'aurelia-fetch-clie
         };
 
         return ElasticSearchDataService;
-      }(DataService)) || _class) || _class));
+      }(DataService)) || _class));
 
       _export('ElasticSearchDataService', ElasticSearchDataService);
     }

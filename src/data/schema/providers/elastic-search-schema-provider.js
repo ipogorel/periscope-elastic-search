@@ -1,9 +1,7 @@
 import {inject} from 'aurelia-framework';
-import {HttpClient} from 'aurelia-fetch-client';
 import {SchemaProvider} from 'periscope-framework';
 import * as _ from 'lodash';
 
-@inject(HttpClient)
 export class ElasticSearchSchemaProvider extends SchemaProvider{
   constructor(http, host, index, type){
     super();

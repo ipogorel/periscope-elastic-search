@@ -6,11 +6,10 @@ declare module 'periscope-elastic-search' {
     SchemaProvider
   } from 'periscope-framework';
   import {
-    inject,
-    transient
+    transient,
+    inject
   } from 'aurelia-framework';
   import {
-    HttpClient,
     json
   } from 'aurelia-fetch-client';
   export * from 'periscope-elastic-search/data/ast/parsers/elastic-search-dsl-templates';
@@ -19,7 +18,7 @@ declare module 'periscope-elastic-search' {
   export * from 'periscope-elastic-search/data/service/elasticsearch-data-service';
   export function configure(aurelia: any): any;
   export class ElasticSearchDataService extends DataService {
-    constructor(http: any);
+    constructor();
     read(options: any): any;
   }
   export class AstToElasticSearchQueryParser extends AstParser {

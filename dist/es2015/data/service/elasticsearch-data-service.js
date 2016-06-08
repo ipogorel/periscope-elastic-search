@@ -1,17 +1,13 @@
-var _dec, _dec2, _class;
+var _dec, _class;
 
 import { DataService } from 'periscope-framework';
-import { inject, transient } from 'aurelia-framework';
-import { HttpClient, json } from 'aurelia-fetch-client';
+import { transient } from 'aurelia-framework';
+import { json } from 'aurelia-fetch-client';
 import * as _ from 'lodash';
 
-export let ElasticSearchDataService = (_dec = transient(), _dec2 = inject(HttpClient), _dec(_class = _dec2(_class = class ElasticSearchDataService extends DataService {
-  constructor(http) {
+export let ElasticSearchDataService = (_dec = transient(), _dec(_class = class ElasticSearchDataService extends DataService {
+  constructor() {
     super();
-    http.configure(config => {
-      config.useStandardConfiguration();
-    });
-    this._http = http;
   }
 
   read(options) {
@@ -29,7 +25,7 @@ export let ElasticSearchDataService = (_dec = transient(), _dec2 = inject(HttpCl
       }
     }
 
-    return this._http.fetch(url, {
+    return this.httpClient.fetch(url, {
       method: 'post',
       body: json(request)
     }).then(response => {
@@ -43,4 +39,4 @@ export let ElasticSearchDataService = (_dec = transient(), _dec2 = inject(HttpCl
       };
     });
   }
-}) || _class) || _class);
+}) || _class);

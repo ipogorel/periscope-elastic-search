@@ -5,11 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ElasticSearchSchemaProvider = undefined;
 
-var _dec, _class;
-
 var _aureliaFramework = require('aurelia-framework');
-
-var _aureliaFetchClient = require('aurelia-fetch-client');
 
 var _periscopeFramework = require('periscope-framework');
 
@@ -25,7 +21,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = (_dec = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient), _dec(_class = function (_SchemaProvider) {
+var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = function (_SchemaProvider) {
   _inherits(ElasticSearchSchemaProvider, _SchemaProvider);
 
   function ElasticSearchSchemaProvider(http, host, index, type) {
@@ -63,4 +59,4 @@ var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = (_dec = 
   };
 
   return ElasticSearchSchemaProvider;
-}(_periscopeFramework.SchemaProvider)) || _class);
+}(_periscopeFramework.SchemaProvider);

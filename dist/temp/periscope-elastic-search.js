@@ -7,7 +7,7 @@ exports.ElasticSearchSchemaProvider = exports.ElasticSearchToDslTemplates = expo
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _dec, _dec2, _class, _dec3, _class2;
+var _dec, _class;
 
 var _elasticSearchDslTemplates = require('./data/ast/parsers/elastic-search-dsl-templates');
 
@@ -78,19 +78,13 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function configure(aurelia) {}
 
-var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _aureliaFramework.transient)(), _dec2 = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient), _dec(_class = _dec2(_class = function (_DataService) {
+var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _aureliaFramework.transient)(), _dec(_class = function (_DataService) {
   _inherits(ElasticSearchDataService, _DataService);
 
-  function ElasticSearchDataService(http) {
+  function ElasticSearchDataService() {
     _classCallCheck(this, ElasticSearchDataService);
 
-    var _this = _possibleConstructorReturn(this, _DataService.call(this));
-
-    http.configure(function (config) {
-      config.useStandardConfiguration();
-    });
-    _this._http = http;
-    return _this;
+    return _possibleConstructorReturn(this, _DataService.call(this));
   }
 
   ElasticSearchDataService.prototype.read = function read(options) {
@@ -110,7 +104,7 @@ var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _a
       }
     }
 
-    return this._http.fetch(url, {
+    return this.httpClient.fetch(url, {
       method: 'post',
       body: (0, _aureliaFetchClient.json)(request)
     }).then(function (response) {
@@ -126,7 +120,7 @@ var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _a
   };
 
   return ElasticSearchDataService;
-}(_periscopeFramework.DataService)) || _class) || _class);
+}(_periscopeFramework.DataService)) || _class);
 
 var AstToElasticSearchQueryParser = exports.AstToElasticSearchQueryParser = function (_AstParser) {
   _inherits(AstToElasticSearchQueryParser, _AstParser);
@@ -315,7 +309,7 @@ var ElasticSearchToDslTemplates = exports.ElasticSearchToDslTemplates = function
   return ElasticSearchToDslTemplates;
 }();
 
-var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = (_dec3 = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient), _dec3(_class2 = function (_SchemaProvider) {
+var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = function (_SchemaProvider) {
   _inherits(ElasticSearchSchemaProvider, _SchemaProvider);
 
   function ElasticSearchSchemaProvider(http, host, index, type) {
@@ -353,4 +347,4 @@ var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = (_dec3 =
   };
 
   return ElasticSearchSchemaProvider;
-}(_periscopeFramework.SchemaProvider)) || _class2);
+}(_periscopeFramework.SchemaProvider);

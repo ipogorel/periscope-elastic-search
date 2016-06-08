@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {DataService,AstParser,SchemaProvider} from 'periscope-framework';
-import {inject,transient} from 'aurelia-framework';
-import {HttpClient,json} from 'aurelia-fetch-client';
+import {transient,inject} from 'aurelia-framework';
+import {json} from 'aurelia-fetch-client';
 
 export * from './data/ast/parsers/elastic-search-dsl-templates';
 export * from './data/ast/parsers/ast-to-elastic-search-query-parser';
@@ -13,14 +13,9 @@ export function configure(aurelia) {
 }
 
 @transient()
-@inject(HttpClient)
 export class ElasticSearchDataService extends DataService {
-  constructor(http) {
+  constructor() {
     super();
-    http.configure(config => {
-      config.useStandardConfiguration();
-    });
-    this._http = http;
   }
 
   read(options) { //options: fields,filter, take, skip, sort
@@ -44,10 +39,8 @@ export class ElasticSearchDataService extends DataService {
       }
     }
 
-    //request.query = {"bool":{"must":[{"terms":{"Weight":["4.5","2.5"]}}]}};
 
-
-    return this._http
+    return this.httpClient
       .fetch(url,{
         method: 'post',
         body: json(request)
@@ -260,7 +253,6 @@ export class ElasticSearchToDslTemplates{
 }
 
 
-@inject(HttpClient)
 export class ElasticSearchSchemaProvider extends SchemaProvider{
   constructor(http, host, index, type){
     super();

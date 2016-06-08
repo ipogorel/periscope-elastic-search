@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-framework', 'aurelia-fetch-client', 'periscope-framework', 'lodash'], function (exports, _aureliaFramework, _aureliaFetchClient, _periscopeFramework, _lodash) {
+define(['exports', 'aurelia-framework', 'periscope-framework', 'lodash'], function (exports, _aureliaFramework, _periscopeFramework, _lodash) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -55,9 +55,7 @@ define(['exports', 'aurelia-framework', 'aurelia-fetch-client', 'periscope-frame
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 
-  var _dec, _class;
-
-  var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = (_dec = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient), _dec(_class = function (_SchemaProvider) {
+  var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = function (_SchemaProvider) {
     _inherits(ElasticSearchSchemaProvider, _SchemaProvider);
 
     function ElasticSearchSchemaProvider(http, host, index, type) {
@@ -95,5 +93,5 @@ define(['exports', 'aurelia-framework', 'aurelia-fetch-client', 'periscope-frame
     };
 
     return ElasticSearchSchemaProvider;
-  }(_periscopeFramework.SchemaProvider)) || _class);
+  }(_periscopeFramework.SchemaProvider);
 });
