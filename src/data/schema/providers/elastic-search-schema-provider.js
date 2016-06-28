@@ -8,9 +8,6 @@ export class ElasticSearchSchemaProvider extends SchemaProvider{
     this.host = host;
     this.index = index;
     this.type = type;
-    http.configure(config => {
-      config.useStandardConfiguration();
-    });
     this._http = http;
   }
   getSchema(){

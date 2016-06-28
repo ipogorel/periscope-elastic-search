@@ -66,9 +66,6 @@ define(['exports', 'aurelia-framework', 'periscope-framework', 'lodash'], functi
       _this.host = host;
       _this.index = index;
       _this.type = type;
-      http.configure(function (config) {
-        config.useStandardConfiguration();
-      });
       _this._http = http;
       return _this;
     }

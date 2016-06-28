@@ -320,9 +320,6 @@ var ElasticSearchSchemaProvider = exports.ElasticSearchSchemaProvider = function
     _this4.host = host;
     _this4.index = index;
     _this4.type = type;
-    http.configure(function (config) {
-      config.useStandardConfiguration();
-    });
     _this4._http = http;
     return _this4;
   }
