@@ -72,7 +72,7 @@ define(['exports', 'periscope-framework', 'aurelia-framework', 'aurelia-fetch-cl
       var url = this.url + "_search";
       var request = {};
       if (options.fields) request._source = { include: options.fields };
-      if (options.filter) request.query = JSON.parse(this.filterParser.getFilter(options.filter));
+      if (options.filter) request.query = JSON.parse(this.filterParser ? this.filterParser.getFilter(options.filter) : options.filter);
       if (options.take) request.size = options.take;
       if (options.skip) request.from = options.skip;
       if (options.sort) {
