@@ -1,6 +1,6 @@
 {
   "name": "periscope-elastic-search",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Elastic search DataSource and intellisense provider",
   "keywords": [
     "periscope",
