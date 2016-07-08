@@ -42,7 +42,7 @@
       "elasticsearch": "^11.0.1",
       "jquery": "^2.2.3",
       "lodash": "^4.11.1",
-      "periscope-framework": "^0.0.20"
+      "periscope-framework": "^0.0.21"
     },
     "devDependencies": {
       "babel": "^5.1.13",
