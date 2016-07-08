@@ -11,7 +11,7 @@ export let ElasticSearchDataService = (_dec = transient(), _dec(_class = class E
   }
 
   read(options) {
-    let url = this.url + "_search";
+    let url = this.url;
     let request = {};
     if (options.fields) request._source = { include: options.fields };
     if (options.filter) request.query = JSON.parse(this.filterParser ? this.filterParser.getFilter(options.filter) : options.filter);

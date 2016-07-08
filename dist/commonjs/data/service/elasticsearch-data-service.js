@@ -37,7 +37,7 @@ var ElasticSearchDataService = exports.ElasticSearchDataService = (_dec = (0, _a
   ElasticSearchDataService.prototype.read = function read(options) {
     var _this2 = this;
 
-    var url = this.url + "_search";
+    var url = this.url;
     var request = {};
     if (options.fields) request._source = { include: options.fields };
     if (options.filter) request.query = JSON.parse(this.filterParser ? this.filterParser.getFilter(options.filter) : options.filter);

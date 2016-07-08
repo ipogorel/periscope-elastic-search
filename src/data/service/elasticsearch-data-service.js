@@ -10,7 +10,7 @@ export class ElasticSearchDataService extends DataService {
   }
 
   read(options) { //options: fields,filter, take, skip, sort
-    let url = this.url + "_search"
+    let url = this.url;
     let request = {};
     if (options.fields)
       request._source = {include: options.fields};
